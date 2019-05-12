@@ -4,10 +4,12 @@
  * Description: Design a consumer with queue which lock free
  *
  ***************************************************************************/
+#pragma once
 #include <atomic>
 #include <thread>
 #include <queue>
 #include <functional>
+#include "ThreadSafeLimitQueue.hpp"
 
 template <class T>
 class LockFreeQueueConsumer
@@ -30,7 +32,7 @@ private:
 	//	标识当前正在写入的队列的编号
 	std::atomic<int> m_WriteQueueIndex;
 	//	两个队列，生产者和消费者分别使用其中一个，避免竞争
-	std::queue<T> m_Queues[2];
+	ThreadSafeLimitQueue<T> m_Queues[2];
 	//	消费线程句柄
 	std::thread *m_ThrConsume;
 	//	标识当前线程是否退出
@@ -110,7 +112,7 @@ void LockFreeQueueConsumer<T>::ConsumerDataImp()
 			{
 				if (m_Exit)
 					break;
-				std::this_thread::sleep_for(std::chrono::milliseconds(5));
+				std::this_thread::sleep_for(std::chrono::milliseconds(0));
 				continue;
 			}
 			//2.数据在另外的队列里：直接取另外队列的数据消费即可，生产者继续往当前的队列中生产；
@@ -139,4 +141,3 @@ void LockFreeQueueConsumer<T>::ConsumerDataImp()
 		}
 	}
 }
-
